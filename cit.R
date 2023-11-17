@@ -58,25 +58,3 @@ cit.dkf
 
 
 
-# Automated Machine Learning
-library(h2o)
-h2o.init()
-
-df <- h2o.importFile("credit.csv")
-y <- "class"
-x <- setdiff(names(df), y)
-
-df[, y] <- as.factor(df[, y])
-
-# Run AutoML for 20 base models
-aml <- h2o.automl(x = x, y = y,
-                  training_frame = df,
-                  max_models = 20,
-                  seed = 1)
-
-lb <- aml@leaderboard
-print(lb)
-best_model <- h2o.get_best_model(aml)
-
-
-m <- h2o.get_best_model(aml, criterion = "accuracy")
