@@ -34,10 +34,11 @@ train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
 train.data <- df[train,]
 test.data <- df[-train,]
 # 10-fold cross validation
-ctrl <- caret::trainControl(method = "cv",number = 10)
+ctrl <- caret::trainControl(method = "cv",number = 10, summaryFunction = multiClassSummary)
 cit.kf <- caret::train(class ~ ., data = train.data, 
                        method = "ctree", 
-                       trControl = ctrl)
+                       trControl = ctrl,
+                       tuneLength = 50)
 cit.kf # results
 plot(cit.kf) # plots cv graph 
 pred <- predict(cit.kf, test.data) # Cross-validated model
@@ -65,8 +66,11 @@ train <- caret::createDataPartition(df_down$class, p = 0.70, list = FALSE)
 train.data <- df_down[train,]
 test.data <- df_down[-train,]
 
-ctrl <- caret::trainControl(method = "cv",number = 10)
-cit.dkf <- caret::train(class ~ ., data = train.data, method = "ctree", trControl = ctrl)
+
+cit.dkf <- caret::train(class ~ ., data = train.data, 
+                        method = "ctree", 
+                        trControl = ctrl,
+                        tuneLength = 50)
 cit.dkf # results
 plot(cit.dkf) # plots cv graph
 
