@@ -16,6 +16,7 @@ library(mlr3)
 library(party)
 library(sandwich)
 library(ggplot2)
+library(caret)
 
 # Get credit data from openml
 odata <- odt(id = 31)
@@ -56,10 +57,12 @@ party::nodes(cit, 2)[[1]]$criterion$criterion
 ##########################
 # Build model with the original data set
 ##########################
+# Data splitting
 set.seed(1)
 train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
 train.data <- df[train,]
 test.data <- df[-train,]
+
 # 10-fold cross validation
 ctrl <- caret::trainControl(method = "cv",number = 10, summaryFunction = multiClassSummary)
 cit.kf <- caret::train(class ~ ., data = train.data, 
@@ -67,11 +70,11 @@ cit.kf <- caret::train(class ~ ., data = train.data,
                        trControl = ctrl,
                        tuneLength = 50)
 cit.kf # results
-plot(cit.kf) # plots cv graph 
+plot(cit.kf, xlab="P-Value Threshold") # plots cv graph 
 pred <- predict(cit.kf, test.data) # Cross-validated model
 confusionMatrix(test.data$class, pred)
 
-tree <- ctree(class ~ ., data = train.data, 
+tree <- caret::ctree(class ~ ., data = train.data, 
                      controls = ctree_control(mincriterion = 0.95))
 plot(tree) # plot the tree
 tree
@@ -87,20 +90,19 @@ cit.down <- party::ctree(class ~ ., data = df_down)
 
 plot(cit.down)
 
-# 10-fold cross validation with downsampled data
-
+# Data splitting
 set.seed(1)
 train <- caret::createDataPartition(df_down$class, p = 0.70, list = FALSE)
 train.data <- df_down[train,]
 test.data <- df_down[-train,]
 
-
+# 10-fold cross validation with downsampled data
 cit.dkf <- caret::train(class ~ ., data = train.data, 
                         method = "ctree", 
                         trControl = ctrl,
                         tuneLength = 50)
 cit.dkf # results
-plot(cit.dkf) # plots cv graph
+plot(cit.dkf, xlab="P-value Threshold") # plots cv graph
 
 pred <- predict(cit.dkf, test.data)
 confusionMatrix(test.data$class, pred)
