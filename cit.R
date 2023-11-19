@@ -17,6 +17,8 @@ library(party)
 library(sandwich)
 library(ggplot2)
 library(caret)
+library(tibble)
+library(cvms)
 
 # Get credit data from openml
 odata <- odt(id = 31)
@@ -57,6 +59,7 @@ party::nodes(cit, 2)[[1]]$criterion$criterion
 ##########################
 # Build model with the original data set
 ##########################
+#df$class <- plyr::mapvalues(df$class, c("good", "bad"), c("0", "1"))
 # Data splitting
 set.seed(1)
 train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
@@ -70,13 +73,22 @@ cit.kf <- caret::train(class ~ ., data = train.data,
                        trControl = ctrl,
                        tuneLength = 50)
 cit.kf # results
-plot(cit.kf, xlab="P-Value Threshold") # plots cv graph 
+plot(cit.kf,xlab="P-Value Threshold") # plots cv graph 
 pred <- predict(cit.kf, test.data) # Cross-validated model
-confusionMatrix(test.data$class, pred)
+confusionMatrix(test.data$class, pred) # Confusion Matrix
 
+# Plot Confusion Matrix
+cfm <- as_tibble(table(tibble("target" = test.data$class,
+                           "prediction" = pred)))
+plot_confusion_matrix(cfm, 
+                      target_col = "target", 
+                      prediction_col = "prediction",
+                      counts_col = "n")
+
+# Plot the Conditional Inference Tree
 tree <- caret::ctree(class ~ ., data = train.data, 
                      controls = ctree_control(mincriterion = 0.95))
-plot(tree) # plot the tree
+plot(tree) 
 tree
 
 ##########################
@@ -102,11 +114,18 @@ cit.dkf <- caret::train(class ~ ., data = train.data,
                         trControl = ctrl,
                         tuneLength = 50)
 cit.dkf # results
-plot(cit.dkf, xlab="P-value Threshold") # plots cv graph
+plot(cit.dkf, xlab="P-value Threshold") # Plots cv graph
 
-pred <- predict(cit.dkf, test.data)
+pred <- predict(cit.dkf, test.data) # Predictions
 confusionMatrix(test.data$class, pred)
 
+# Plot Confusion Matrix
+cfm <- as_tibble(table(tibble("target" = test.data$class,
+                              "prediction" = pred)))
+plot_confusion_matrix(cfm, 
+                      target_col = "target", 
+                      prediction_col = "prediction",
+                      counts_col = "n")
 
 
 
