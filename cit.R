@@ -15,19 +15,46 @@ library(mlr3oml)
 library(mlr3)
 library(party)
 library(sandwich)
+library(ggplot2)
 
 # Get credit data from openml
 odata <- odt(id = 31)
 df <- odata$data
 
-cit <- party::ctree(class ~ ., data = df)
+##########################
+# Exploratory Data Analysis
+##########################
 
+# Class Distribution
+ggplot(df, aes(x = class, fill = class)) + 
+  geom_bar() +
+  labs(title = "Class Distribution", x = "Class", y = "Count") +
+  theme_minimal()
+
+# Credit History Distribution
+ggplot(df, aes(x = credit_history, fill = credit_history)) +
+  geom_bar() +
+  labs(title = "Credit History ",x = "Type",y = "Count") +
+  theme_minimal()
+
+# Histogram of Age
+hist(df$age, col=rgb(0.2,0.8,0.5,0.5), main="" , xlab="Age")
+abline(v = mean(df$age), col="red", lwd=3, lty=2)
+
+
+##########################
+# Visualize CIT
+##########################
+
+cit <- party::ctree(class ~ ., data = df)
 plot(cit)
 
 party::nodes(cit, 1)[[1]]$criterion$criterion
 party::nodes(cit, 2)[[1]]$criterion$criterion
 
 
+##########################
+# Build model with the original data set
 ##########################
 set.seed(1)
 train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
@@ -48,9 +75,10 @@ tree <- ctree(class ~ ., data = train.data,
                      controls = ctree_control(mincriterion = 0.95))
 plot(tree) # plot the tree
 tree
-###########################
 
-# Downsampling
+##########################
+# Build Model with downsampled data set
+##########################
 df_down <- caret::downSample(x = df[, -c("class")], 
                              y = df$class)
 colnames(df_down)[length(df_down)] <- "class"
