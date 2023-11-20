@@ -55,11 +55,42 @@ cit <- party::ctree(class ~ ., data = df)
 party::nodes(cit, 1)[[1]]$criterion$criterion
 party::nodes(cit, 2)[[1]]$criterion$criterion
 
+##########################
+# Calculate Evaluation Metrics
+##########################
+
+calculate_metrics <- function(true_labels, predicted_labels) {
+  # Create confusion matrix
+  conf_matrix <- table(predicted_labels, true_labels)
+  
+  # Calculate metrics
+  TP <- conf_matrix[1, 1]  # True positives
+  FP <- conf_matrix[1, 2]  # False positives
+  FN <- conf_matrix[2, 1]  # False negatives
+  TN <- conf_matrix[2, 2]  # True negatives
+  
+  # Calculate metrics
+  accuracy <- (TP + TN) / sum(conf_matrix)
+  precision <- TP / (TP + FP)
+  recall <- TP / (TP + FN)
+  f1_score <- 2 * (precision * recall) / (precision + recall)
+  
+  # Store metrics in a dataframe
+  metrics_df <- data.frame(
+    Accuracy = accuracy,
+    Precision = precision,
+    Recall = recall,
+    F1_Score = f1_score
+  )
+  
+  return(metrics_df)
+}
 
 ##########################
 # Build model with the original data set
 ##########################
-#df$class <- plyr::mapvalues(df$class, c("good", "bad"), c("0", "1"))
+df$class <- relevel(df$class, "bad")
+df$class <- plyr::mapvalues(df$class, c("good", "bad"), c("0", "1"))
 # Data splitting
 set.seed(1)
 train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
@@ -71,6 +102,8 @@ baseline.cit <- party::ctree(class ~ ., data = train.data)
 pred <- predict(baseline.cit, test.data)
 confusionMatrix(test.data$class, pred)
 
+baseline.results <- calculate_metrics(test.data$class, pred)
+
 # 10-fold cross validation
 ctrl <- caret::trainControl(method = "cv",number = 10, summaryFunction = multiClassSummary)
 cit.kf <- caret::train(class ~ ., data = train.data, 
@@ -81,6 +114,7 @@ cit.kf # results
 plot(cit.kf,xlab="P-Value Threshold") # plots cv graph 
 pred <- predict(cit.kf, test.data) # Cross-validated model
 confusionMatrix(test.data$class, pred) # Confusion Matrix
+tuned.model.results <- calculate_metrics(test.data$class, pred)
 
 # Plot Confusion Matrix
 cfm <- as_tibble(table(tibble("target" = test.data$class,
@@ -123,6 +157,7 @@ plot(cit.dkf, xlab="P-value Threshold") # Plots cv graph
 
 pred <- predict(cit.dkf, test.data) # Predictions
 confusionMatrix(test.data$class, pred)
+cit.dkf.results <- calculate_metrics(test.data$class, pred)
 
 # Plot Confusion Matrix
 cfm <- as_tibble(table(tibble("target" = test.data$class,
