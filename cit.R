@@ -50,7 +50,7 @@ abline(v = mean(df$age), col="red", lwd=3, lty=2)
 ##########################
 
 cit <- party::ctree(class ~ ., data = df)
-plot(cit)
+#plot(cit)
 
 party::nodes(cit, 1)[[1]]$criterion$criterion
 party::nodes(cit, 2)[[1]]$criterion$criterion
@@ -65,6 +65,11 @@ set.seed(1)
 train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
 train.data <- df[train,]
 test.data <- df[-train,]
+
+# Baseline Results
+baseline.cit <- party::ctree(class ~ ., data = train.data)
+pred <- predict(baseline.cit, test.data)
+confusionMatrix(test.data$class, pred)
 
 # 10-fold cross validation
 ctrl <- caret::trainControl(method = "cv",number = 10, summaryFunction = multiClassSummary)
@@ -87,7 +92,7 @@ plot_confusion_matrix(cfm,
 
 # Plot the Conditional Inference Tree
 tree <- party::ctree(class ~ ., data = train.data, 
-                     controls = ctree_control(mincriterion = 0.83))
+                     controls = ctree_control(mincriterion = 0.95))
 plot(tree) 
 tree
 
