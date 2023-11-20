@@ -90,9 +90,6 @@ calculate_metrics <- function(true_labels, predicted_labels) {
 ##########################
 # Build model with the original data set
 ##########################
-# Relevel factors
-#df$class <- relevel(df$class, "bad")
-#df$class <- plyr::mapvalues(df$class, c("bad", "good"), c("1", "0"))
 
 # Data splitting
 set.seed(1)
@@ -100,17 +97,23 @@ train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
 train.data <- df[train,]
 test.data <- df[-train,]
 
+
 # Baseline Results
-baseline.cit <- party::ctree(class ~ ., data = train.data)
+baseline.cit <- party::ctree(class ~ ., data = train.data, controls = ctree_control(testtype = "Bonferroni"))
+plot(baseline.cit)
 pred <- predict(baseline.cit, test.data)
 confusionMatrix(test.data$class, pred)
 baseline.results <- calculate_metrics(test.data$class, pred)
 
+##########################
+# Tuned Model
+##########################
 # 10-fold cross validation
 ctrl <- caret::trainControl(method = "cv",number = 10, summaryFunction = multiClassSummary)
 cit.kf <- caret::train(class ~ ., data = train.data, 
                        method = "ctree", 
                        trControl = ctrl,
+                       controls = ctree_control(testtype = "Bonferroni"),
                        tuneLength = 50)
 cit.kf # results
 plot(cit.kf,xlab="P-Value Threshold") # plots cv graph 
@@ -128,7 +131,7 @@ plot_confusion_matrix(cfm,
 
 # Plot the Conditional Inference Tree
 tree <- party::ctree(class ~ ., data = train.data, 
-                     controls = ctree_control(mincriterion = 0.83))
+                     controls = ctree_control(mincriterion = 0.83, testtype = "Bonferroni"))
 plot(tree) 
 tree
 
