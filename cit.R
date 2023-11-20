@@ -86,8 +86,8 @@ plot_confusion_matrix(cfm,
                       counts_col = "n")
 
 # Plot the Conditional Inference Tree
-tree <- caret::ctree(class ~ ., data = train.data, 
-                     controls = ctree_control(mincriterion = 0.95))
+tree <- party::ctree(class ~ ., data = train.data, 
+                     controls = ctree_control(mincriterion = 0.83))
 plot(tree) 
 tree
 
