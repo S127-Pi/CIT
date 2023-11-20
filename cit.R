@@ -50,10 +50,10 @@ abline(v = mean(df$age), col="red", lwd=3, lty=2)
 ##########################
 
 cit <- party::ctree(class ~ ., data = df)
-#plot(cit)
 
-party::nodes(cit, 1)[[1]]$criterion$criterion
-party::nodes(cit, 2)[[1]]$criterion$criterion
+#plot(cit)
+#party::nodes(cit, 1)[[1]]$criterion$criterion
+#party::nodes(cit, 2)[[1]]$criterion$criterion
 
 ##########################
 # Calculate Evaluation Metrics
@@ -62,12 +62,13 @@ party::nodes(cit, 2)[[1]]$criterion$criterion
 calculate_metrics <- function(true_labels, predicted_labels) {
   # Create confusion matrix
   conf_matrix <- table(predicted_labels, true_labels)
+  print(conf_matrix)
   
   # Calculate metrics
-  TP <- conf_matrix[1, 1]  # True positives
-  FP <- conf_matrix[1, 2]  # False positives
-  FN <- conf_matrix[2, 1]  # False negatives
-  TN <- conf_matrix[2, 2]  # True negatives
+  TP <- conf_matrix[2, 2]  # True positives
+  FP <- conf_matrix[2, 1]  # False positives
+  FN <- conf_matrix[1, 2]  # False negatives
+  TN <- conf_matrix[1, 1]  # True negatives
   
   # Calculate metrics
   accuracy <- (TP + TN) / sum(conf_matrix)
@@ -89,8 +90,10 @@ calculate_metrics <- function(true_labels, predicted_labels) {
 ##########################
 # Build model with the original data set
 ##########################
-df$class <- relevel(df$class, "bad")
-df$class <- plyr::mapvalues(df$class, c("good", "bad"), c("0", "1"))
+# Relevel factors
+#df$class <- relevel(df$class, "bad")
+#df$class <- plyr::mapvalues(df$class, c("bad", "good"), c("1", "0"))
+
 # Data splitting
 set.seed(1)
 train <- caret::createDataPartition(df$class, p = 0.70, list = FALSE)
@@ -101,7 +104,6 @@ test.data <- df[-train,]
 baseline.cit <- party::ctree(class ~ ., data = train.data)
 pred <- predict(baseline.cit, test.data)
 confusionMatrix(test.data$class, pred)
-
 baseline.results <- calculate_metrics(test.data$class, pred)
 
 # 10-fold cross validation
@@ -126,7 +128,7 @@ plot_confusion_matrix(cfm,
 
 # Plot the Conditional Inference Tree
 tree <- party::ctree(class ~ ., data = train.data, 
-                     controls = ctree_control(mincriterion = 0.95))
+                     controls = ctree_control(mincriterion = 0.83))
 plot(tree) 
 tree
 
