@@ -110,10 +110,13 @@ baseline.results <- calculate_metrics(test.data$class, pred)
 ##########################
 # 10-fold cross validation
 ctrl <- caret::trainControl(method = "cv",number = 10, summaryFunction = multiClassSummary)
+# Specify the tuning grid
+tuneGrid <- expand.grid(mincriterion = seq(0.01, 0.5, by = 0.01))
 cit.kf <- caret::train(class ~ ., data = train.data, 
                        method = "ctree", 
                        trControl = ctrl,
                        controls = ctree_control(testtype = "Bonferroni"),
+                       tuneGrid = tuneGrid,
                        tuneLength = 50)
 cit.kf # results
 plot(cit.kf,xlab="P-Value Threshold") # plots cv graph 
@@ -156,6 +159,7 @@ test.data <- df_down[-train,]
 cit.dkf <- caret::train(class ~ ., data = train.data, 
                         method = "ctree", 
                         trControl = ctrl,
+                        controls = ctree_control(mincriterion = 0.83, testtype = "Bonferroni"),
                         tuneLength = 50)
 cit.dkf # results
 plot(cit.dkf, xlab="P-value Threshold") # Plots cv graph
