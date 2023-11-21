@@ -44,6 +44,12 @@ ggplot(df, aes(x = credit_history, fill = credit_history)) +
 hist(df$age, col=rgb(0.2,0.8,0.5,0.5), main="" , xlab="Age")
 abline(v = mean(df$age), col="red", lwd=3, lty=2)
 
+# Saving Status Distribution
+ggplot(df, aes(x = savings_status, fill = savings_status)) + 
+  geom_bar() +
+  labs(x = "Saving Status", y = "Count") +
+  theme_minimal()
+
 
 ##########################
 # Visualize CIT
