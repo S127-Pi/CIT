@@ -50,6 +50,12 @@ ggplot(df, aes(x = savings_status, fill = savings_status)) +
   labs(x = "Saving Status", y = "Count") +
   theme_minimal()
 
+# Saving Status Distribution
+ggplot(df, aes(x = checking_status, fill = checking_status)) + 
+  geom_bar() +
+  labs(x = "Checking Status", y = "Count") +
+  theme_minimal()
+
 
 ##########################
 # Visualize CIT
@@ -105,7 +111,7 @@ test.data <- df[-train,]
 
 
 # Baseline Results
-baseline.cit <- party::ctree(class ~ ., data = train.data, controls = ctree_control(testtype = "Bonferroni"))
+baseline.cit <- party::ctree(class ~ ., data = train.data, controls = ctree_control(mincriterion = 0.95, testtype = "Bonferroni"))
 plot(baseline.cit)
 pred <- predict(baseline.cit, test.data)
 confusionMatrix(test.data$class, pred)
